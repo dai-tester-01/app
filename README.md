@@ -4,9 +4,9 @@ A small FastAPI playground that sends one prompt to several models at the same t
 [LiteLLM](https://docs.litellm.ai/), then displays each response alongside latency, token use,
 estimated cost, and optional judge scores.
 
-It is intentionally compact enough for a school project while demonstrating production-minded
-practices: typed configuration, isolated provider failures, async concurrency, automated tests,
-linting, type checking, CI, Docker, and secret-safe environment configuration.
+The project emphasizes maintainable, production-minded practices: typed configuration, isolated
+provider failures, async concurrency, automated tests, linting, type checking, CI, Docker, and
+secret-safe environment configuration.
 
 ## How it works
 
