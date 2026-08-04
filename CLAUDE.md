@@ -2,9 +2,9 @@
 
 ## Purpose
 
-This is a compact school project that compares responses from multiple LLMs through LiteLLM.
-The browser UI submits one prompt, sends it to all configured models concurrently, and shows
-responses, latency, token usage, estimated cost, provider errors, and optional judge scores.
+This is an open-source LiteLLM model-comparison service. The browser UI submits one prompt,
+sends it to all configured models concurrently, and shows responses, latency, token usage,
+estimated cost, provider errors, and optional judge scores.
 
 ## Stack
 
@@ -51,8 +51,8 @@ poetry run pytest
 
 ## Agent guidance
 
-- Keep the project intentionally small; avoid adding databases, authentication, queues, or
-  frontend frameworks unless explicitly requested.
+- Preserve the focused service scope; avoid adding databases, authentication, queues, or frontend
+  frameworks unless explicitly requested.
 - Put provider orchestration in `service.py`; keep HTTP handlers in `main.py` thin.
 - Update `.env.example` and `README.md` for every new setting.
 - Add deterministic tests for behavior changes and mock `model_comparator.service.acompletion`;
