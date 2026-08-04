@@ -1,0 +1,50 @@
+{% if error %}
+  <p class="error" role="alert">{{ error }}</p>
+{% elif comparison %}
+  <div class="results-heading">
+    <h2>Results</h2>
+    <p>Costs are shown when LiteLLM can calculate them for the selected model.</p>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Model</th>
+          <th>Response</th>
+          <th>Latency</th>
+          <th>Tokens</th>
+          <th>Cost</th>
+          <th>Judge</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for result in comparison.results %}
+          <tr>
+            <td><code>{{ result.model }}</code></td>
+            <td>
+              {% if result.error %}
+                <span class="error">{{ result.error }}</span>
+              {% else %}
+                <details>
+                  <summary>{{ result.response | truncate(120) }}</summary>
+                  <p class="response">{{ result.response }}</p>
+                </details>
+              {% endif %}
+            </td>
+            <td>{{ "%.2f"|format(result.latency_seconds) }}s</td>
+            <td>{{ result.total_tokens if result.total_tokens is not none else "—" }}</td>
+            <td>{% if result.cost_usd is not none %}${{ "%.5f"|format(result.cost_usd) }}{% else %}—{% endif %}</td>
+            <td>
+              {% if result.judge %}
+                <strong>{{ result.judge.score }}/10</strong>
+                <span class="reasoning">{{ result.judge.reasoning }}</span>
+              {% else %}
+                —
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endif %}

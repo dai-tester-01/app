@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>LiteLLM Model Comparator</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+  </head>
+  <body>
+    <main class="page">
+      <header>
+        <p class="eyebrow">LiteLLM playground</p>
+        <h1>Compare models side by side</h1>
+        <p class="intro">Send one prompt to {{ models | length }} configured models in parallel.</p>
+      </header>
+
+      <section class="card">
+        <form hx-post="/compare" hx-target="#results" hx-swap="innerHTML" hx-indicator="#loading">
+          <label for="prompt">Prompt</label>
+          <textarea id="prompt" name="prompt" rows="7" required maxlength="100000"
+            placeholder="Explain why the sky looks blue to a curious eight-year-old."></textarea>
+          <div class="form-footer">
+            <span class="models">Models: {{ models | join(", ") }}</span>
+            <button type="submit">Compare responses</button>
+          </div>
+        </form>
+        <p id="loading" class="htmx-indicator loading">Contacting models…</p>
+      </section>
+
+      <section id="results" aria-live="polite"></section>
+    </main>
+  </body>
+</html>
