@@ -2,7 +2,7 @@
 
 ## Local setup
 
-1. Install Python 3.11+ and Poetry.
+1. Install Python 3.11+ and Poetry (2.4.1 or later recommended; the Docker image pins `poetry==2.4.1`).
 2. Copy `.env.example` to `.env`.
 3. Add only the provider credentials needed for your configured models.
 4. Install dependencies with `poetry install`.
@@ -30,3 +30,5 @@ deterministic, free, and safe to run in CI.
 - Preserve per-model failure isolation so one provider cannot fail the whole comparison.
 - Add new settings to `Settings` and document them in `.env.example` and `README.md`.
 - Do not log prompts, API keys, or full provider responses at info level.
+- A `CLAUDE.md` file in the repo root contains project instructions for AI coding assistants
+  (Claude Code, Copilot, etc.). Update it when you change project structure or conventions.
