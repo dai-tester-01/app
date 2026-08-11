@@ -70,3 +70,33 @@ async def test_compare_attaches_optional_judge_scores(monkeypatch: pytest.Monkey
     assert comparison.results[0].judge.score == 9
     assert comparison.results[1].judge is not None
     assert comparison.results[1].judge.reasoning == "Too brief."
+
+
+@pytest.mark.asyncio
+async def test_huggingface_model_uses_per_model_timeout(monkeypatch: pytest.MonkeyPatch) -> None:
+    HF_MODEL = "huggingface/mistralai/Mistral-7B-Instruct-v0.3"
+    captured: list[dict[str, object]] = []
+
+    async def fake_completion(**kwargs: object) -> dict[str, object]:
+        captured.append(dict(kwargs))
+        return completion(f"response from {kwargs['model']}")
+
+    monkeypatch.setattr("model_comparator.service.acompletion", fake_completion)
+    service = ComparisonService(
+        Settings(
+            models=["gpt-4o-mini", HF_MODEL],
+            model_timeouts={HF_MODEL: 90},
+        )
+    )
+
+    comparison = await service.compare("Hello")
+
+    assert len(comparison.results) == 2
+    hf_result = next(r for r in comparison.results if r.model == HF_MODEL)
+    assert hf_result.response is not None
+    assert hf_result.error is None
+
+    gpt_call = next(c for c in captured if c["model"] == "gpt-4o-mini")
+    hf_call = next(c for c in captured if c["model"] == HF_MODEL)
+    assert gpt_call["timeout"] == 30
+    assert hf_call["timeout"] == 90
