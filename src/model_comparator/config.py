@@ -15,7 +15,7 @@ class Settings(BaseSettings):
         default_factory=lambda: [
             "gpt-4o-mini",
             "claude-3-5-haiku-latest",
-            "gemini/gemini-1.5-flash",
+            "gemini/gemini-2.0-flash",
         ]
     )
     judge_model: str | None = None
