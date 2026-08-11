@@ -40,10 +40,34 @@ examples. Configure only models for which you have provider credentials and acce
 | `JUDGE_MODEL` | Optional LiteLLM model ID used to rate successful responses. |
 | `REQUEST_TIMEOUT_SECONDS` | Per-model timeout, default `30`. |
 | `MAX_PROMPT_CHARACTERS` | Server-side prompt limit, default `8000`. |
+| `MODEL_TIMEOUTS` | JSON object overriding timeout per model, e.g. `{"huggingface/org/model": 90}`. |
 | `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY` | Provider keys required by selected models. |
+| `HUGGINGFACE_API_KEY` | Required for `huggingface/` prefixed open-source models. |
 
 LiteLLM supports many more model providers and identifiers; see its
 [provider documentation](https://docs.litellm.ai/docs/providers).
+
+## Using open-source models
+
+LiteLLM supports the Hugging Face Inference API natively. Any model hosted on HF can be
+referenced with the `huggingface/<org>/<model>` prefix — no changes to the application code
+are needed:
+
+```env
+MODELS=gpt-4o-mini,huggingface/mistralai/Mistral-7B-Instruct-v0.3
+HUGGINGFACE_API_KEY=hf_...
+```
+
+**Cold-start latency:** Serverless HF models may take 10–60 s to warm up on first request.
+Use `MODEL_TIMEOUTS` to give those models extra headroom without slowing down commercial
+providers:
+
+```env
+MODEL_TIMEOUTS={"huggingface/mistralai/Mistral-7B-Instruct-v0.3": 90}
+```
+
+Cost reporting (`cost_usd`) may show `null` for open-source models that have no billing
+metadata on the HF free tier — this is expected and handled gracefully by the UI.
 
 ## Docker
 

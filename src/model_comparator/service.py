@@ -67,11 +67,12 @@ class ComparisonService:
 
     async def _call_model(self, model: str, prompt: str) -> ModelResult:
         started = perf_counter()
+        timeout = self.settings.model_timeouts.get(model, self.settings.request_timeout_seconds)
         try:
             response = await acompletion(
                 model=model,
                 messages=[{"role": "user", "content": prompt}],
-                timeout=self.settings.request_timeout_seconds,
+                timeout=timeout,
             )
             prompt_tokens, completion_tokens, total_tokens = _usage_fields(response)
             return ModelResult(

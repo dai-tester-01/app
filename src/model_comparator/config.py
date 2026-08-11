@@ -15,12 +15,13 @@ class Settings(BaseSettings):
         default_factory=lambda: [
             "gpt-4o-mini",
             "claude-3-5-haiku-latest",
-            "gemini/gemini-1.5-flash",
+            "gemini/gemini-2.0-flash",
         ]
     )
     judge_model: str | None = None
     request_timeout_seconds: float = Field(default=30, gt=0, le=120)
     max_prompt_characters: int = Field(default=8_000, gt=0, le=100_000)
+    model_timeouts: dict[str, float] = Field(default_factory=dict)
 
     @field_validator("models", mode="before")
     @classmethod
