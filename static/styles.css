@@ -31,3 +31,14 @@ summary { cursor: pointer; }
 .error { color: #b42318; font-weight: 600; }
 .reasoning { display: block; color: #5e697b; font-size: .85rem; margin-top: .25rem; }
 @media (max-width: 600px) { .page { padding-top: 2rem; } .form-footer { align-items: flex-start; flex-direction: column; } }
+
+/* Use-case presets picker */
+.use-case-picker { padding: 1rem 1.25rem; margin-bottom: 0; }
+.picker-label { font-weight: 700; margin: 0 0 .75rem; font-size: .9rem; }
+.category-tabs { display: flex; gap: .5rem; margin-bottom: .75rem; flex-wrap: wrap; }
+.tab-btn { background: #f0ecfc; color: #5d3fd3; border: 0; border-radius: 20px; padding: .35rem .9rem; font: inherit; font-size: .82rem; font-weight: 600; cursor: pointer; }
+.tab-btn.active, .tab-btn:hover { background: #5d3fd3; color: #fff; }
+.tab-panel { display: flex; gap: .45rem; flex-wrap: wrap; }
+.tab-panel.hidden { display: none; }
+.preset-btn { background: #f8f9fb; color: #172033; border: 1px solid #dde3ef; border-radius: 8px; padding: .4rem .85rem; font: inherit; font-size: .82rem; font-weight: 500; cursor: pointer; text-align: left; }
+.preset-btn:hover { background: #eef1f8; border-color: #b8c2d4; }

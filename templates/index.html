@@ -15,6 +15,28 @@
         <p class="intro">Send one prompt to {{ models | length }} configured models in parallel.</p>
       </header>
 
+      <section class="card use-case-picker">
+        <p class="picker-label">Use-case presets</p>
+        <div class="category-tabs" role="tablist">
+          {% for cat_key, cat_label in category_labels.items() %}
+            <button class="tab-btn{% if loop.first %} active{% endif %}"
+                    role="tab"
+                    aria-selected="{{ 'true' if loop.first else 'false' }}"
+                    data-category="{{ cat_key }}"
+                    onclick="switchTab(this)">{{ cat_label }}</button>
+          {% endfor %}
+        </div>
+        {% for cat_key, use_cases in use_cases_by_category.items() %}
+          <div class="tab-panel{% if not loop.first %} hidden{% endif %}" id="tab-{{ cat_key }}">
+            {% for uc in use_cases %}
+              <button class="preset-btn" onclick="loadPreset({{ uc.prompt | tojson }})">
+                {{ uc.title }}
+              </button>
+            {% endfor %}
+          </div>
+        {% endfor %}
+      </section>
+
       <section class="card">
         <form hx-post="/compare" hx-target="#results" hx-swap="innerHTML" hx-indicator="#loading">
           <label for="prompt">Prompt</label>
@@ -30,5 +52,21 @@
 
       <section id="results" aria-live="polite"></section>
     </main>
+    <script>
+      function loadPreset(prompt) {
+        document.getElementById('prompt').value = prompt;
+        document.getElementById('prompt').focus();
+      }
+      function switchTab(btn) {
+        const cat = btn.dataset.category;
+        document.querySelectorAll('.tab-btn').forEach(b => {
+          b.classList.toggle('active', b === btn);
+          b.setAttribute('aria-selected', b === btn ? 'true' : 'false');
+        });
+        document.querySelectorAll('.tab-panel').forEach(p => {
+          p.classList.toggle('hidden', p.id !== 'tab-' + cat);
+        });
+      }
+    </script>
   </body>
 </html>
