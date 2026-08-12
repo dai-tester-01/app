@@ -18,6 +18,14 @@ Prompt ──> GPT / Claude / Gemini (concurrently) ──> response + latency +
 One provider failing never prevents the other results from appearing. LiteLLM reads provider
 credentials from the environment, so the application does not store API keys.
 
+## Endpoints
+
+| Method & path | Purpose |
+| --- | --- |
+| `GET /` | Playground page listing the configured models. |
+| `POST /compare` | Run all configured models for the submitted `prompt` form field and return an HTML result fragment. |
+| `GET /health` | Liveness check returning `{"status": "ok"}`; used by the Docker `HEALTHCHECK`. |
+
 ## Quick start
 
 Requirements: Python 3.11+ and [Poetry](https://python-poetry.org/).
