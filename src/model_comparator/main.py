@@ -11,6 +11,7 @@ from fastapi.templating import Jinja2Templates
 
 from model_comparator.config import Settings, get_settings
 from model_comparator.service import ComparisonService
+from model_comparator.use_cases import USE_CASES
 
 ROOT = Path(__file__).resolve().parents[2]
 templates = Jinja2Templates(directory=str(ROOT / "templates"))
@@ -33,13 +34,33 @@ app.mount("/static", StaticFiles(directory=str(ROOT / "static")), name="static")
 async def index(request: Request) -> HTMLResponse:
     """Render the playground page."""
     settings: Settings = request.app.state.settings
-    return templates.TemplateResponse(request, "index.html", {"models": settings.models})
+    return templates.TemplateResponse(
+        request,
+        "index.html",
+        {"models": settings.models, "use_cases": USE_CASES},
+    )
 
 
 @app.get("/health")
 async def health() -> JSONResponse:
     """Report that the web process is ready; providers are checked per request."""
     return JSONResponse({"status": "ok"})
+
+
+@app.get("/use-cases")
+async def use_cases() -> JSONResponse:
+    """Return the catalogue of pre-built use-case prompts as JSON."""
+    return JSONResponse(
+        [
+            {
+                "id": uc.id,
+                "category": uc.category,
+                "title": uc.title,
+                "prompt": uc.prompt,
+            }
+            for uc in USE_CASES
+        ]
+    )
 
 
 @app.post("/compare", response_class=HTMLResponse)

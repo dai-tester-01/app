@@ -28,6 +28,29 @@
         <p id="loading" class="htmx-indicator loading">Contacting models…</p>
       </section>
 
+      {% if use_cases %}
+      <section class="use-cases-section">
+        <h2 class="use-cases-heading">Use-case examples</h2>
+        <p class="use-cases-intro">Click an example to pre-fill the prompt, then compare how each model responds.</p>
+        {% set ns = namespace(seen=[]) %}
+        {% for uc in use_cases %}
+          {% if uc.category not in ns.seen %}
+            {% set ns.seen = ns.seen + [uc.category] %}
+            <div class="use-cases-group">
+              <span class="use-cases-category">{{ uc.category }}</span>
+              <div class="use-cases-chips">
+                {% for item in use_cases if item.category == uc.category %}
+                <button type="button" class="chip"
+                        onclick="document.getElementById('prompt').value = this.dataset.prompt; window.scrollTo({top:0,behavior:'smooth'});"
+                        data-prompt="{{ item.prompt | e }}">{{ item.title }}</button>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </section>
+      {% endif %}
+
       <section id="results" aria-live="polite"></section>
     </main>
   </body>
