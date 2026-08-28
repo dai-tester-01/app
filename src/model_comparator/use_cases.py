@@ -1,4 +1,4 @@
-"""Pre-built prompt templates for real-world model comparison use-cases."""
+﻿"""Pre-built prompt templates for real-world model comparison use-cases."""
 
 from dataclasses import dataclass
 
@@ -131,6 +131,90 @@ Questions:
    reducing trade frequency.\
 """
 
+_FINANCE_DCA = """\
+You are a quantitative analyst comparing Dollar-Cost Averaging (DCA) against a
+trend-following entry for ETH daily trading.
+
+Strategy A — Fixed-Interval DCA:
+  Execution : Buy a fixed USD amount of ETH every 7 calendar days, unconditionally.
+  Exit      : No exit; positions accumulate indefinitely (long-only hold).
+  Costs     : 0.10% taker fee per purchase. No slippage assumed (limit order DCA).
+  Metrics   : TWAP cost basis, total return, max portfolio drawdown, Sharpe vs buy-and-hold.
+
+Strategy B — SMA Golden/Death Cross (for comparison):
+  BUY  when SMA(5) crosses above SMA(20) AND SMA(20) > SMA(50).
+  SELL when SMA(5) crosses below SMA(20) OR ATR(14) trailing stop hit (3×ATR below peak).
+  Sizing: 2% equity risk per trade; 0.10% fee + 0.05% slippage per side.
+
+Questions:
+1. Under which market regimes (sustained uptrend, sideways chop, sharp crash) does DCA
+   outperform or underperform the SMA crossover entry? Quantify the directional impact
+   on average cost basis and max drawdown for each regime.
+2. How does purchase interval (weekly vs monthly) affect TWAP cost basis and volatility
+   drag on a high-volatility asset like ETH? What interval minimises basis risk?
+3. DCA eliminates timing risk but carries continuous drawdown exposure. Propose one
+   signal-based filter (e.g. a volatility gate or trend confirmation) that preserves
+   DCA simplicity while reducing drawdown during sustained bear markets, and estimate
+   the expected improvement in Calmar ratio.\
+"""
+
+_FINANCE_PORTFOLIO_ROTATION = """\
+You are a quantitative analyst evaluating a systematic momentum rotation strategy
+across a multi-asset crypto portfolio.
+
+Strategy: Weekly Momentum Rotation (BTC / ETH / SOL + USDC reserve)
+──────────────────────────────────────────────────────────────────────────────────
+Assets  : BTC, ETH, SOL as tradeable assets; 20% USDC cash reserve at all times.
+Signal  : Each Monday, rank the three assets by 30-day momentum (total return).
+          Allocate the 80% risk budget entirely to the top-ranked asset.
+Rebalance: Execute rotation every 7 days OR immediately if the top-ranked asset changes.
+Costs   : 0.10% taker fee + 0.05% slippage per rotation trade.
+Metrics : Sharpe, Sortino, Calmar ratio, max drawdown, annual turnover.
+
+Questions:
+1. BTC, ETH, and SOL frequently exhibit correlation > 0.85 during macro risk-off events.
+   What is the principal failure mode of momentum rotation under high correlation, and
+   how should the strategy adapt its rebalancing logic to reduce whipsaw costs?
+2. How should the 20% USDC reserve be sized dynamically — e.g. scaled by a volatility
+   measure or correlation signal — to balance drawdown protection and return drag during
+   sustained bull markets?
+3. Compare weekly calendar rebalancing to a threshold-based trigger (rebalance only when
+   the top-ranked asset changes). Estimate the effect on annual turnover and Calmar ratio.
+4. Propose one uncorrelated asset (e.g. a commodity index, stablecoin yield, or a
+   volatility instrument) whose inclusion would meaningfully reduce portfolio drawdown
+   without sacrificing momentum signal quality. Justify with correlation assumptions.\
+"""
+
+_FINANCE_VOLUME_BREAKOUT = """\
+You are a quantitative analyst evaluating a volume-confirmed SMA crossover strategy
+for daily ETH trading, where position size scales with volume conviction.
+
+Strategy: Volume-Confirmed SMA Crossover (ETH, daily bars)
+──────────────────────────────────────────────────────────────────────────────────
+Entry  : SMA(5) crosses above SMA(20) AND SMA(20) > SMA(50) (trend filter)
+         AND today's volume > 1.5× the 20-day average volume (volume gate).
+Volume ratio: vol_ratio = clamp(today_vol / avg_vol_20, 0.5, 2.0)
+Sizing : base_risk = 2% of equity.
+         position_size = base_risk × vol_ratio
+         (scales from 1% equity on thin-volume crossovers to 4% on high-conviction spikes)
+Exit   : SMA(5) crosses below SMA(20) OR ATR(14) trailing stop at 3×ATR below peak.
+Costs  : 0.10% taker fee + 0.05% slippage per side.
+Metrics: Sharpe, Sortino, Calmar ratio, false signal rate, trade count.
+
+Questions:
+1. Requiring volume > 1.5× average reduces entries in range-bound markets. Estimate the
+   expected false-signal reduction and the corresponding cost in missed genuine breakouts.
+   At what volume threshold does the filter become too restrictive?
+2. Compare volume-scaled sizing (vol_ratio × base_risk) to fixed 2% sizing on Sortino and
+   Calmar. In what volatility regime is volume scaling most and least beneficial?
+3. Centralised-exchange volume is susceptible to wash trading and spoofing. Propose two
+   alternative liquidity or market-microstructure signals that would be more robust for
+   on-chain or cross-venue ETH trading.
+4. Combine this strategy's volume gate with the confidence-weighted SMA spread from the
+   Confidence-Weighted SMA Crossover strategy. Write a concrete composite entry rule
+   that uses both signals, and identify the dominant failure mode of the combined filter.\
+"""
+
 _SWE_3SUM = """\
 Solve the following algorithm problem. Provide a working Python solution, then
 analyse time and space complexity.
@@ -188,6 +272,24 @@ USE_CASES: list[UseCase] = [
         category="Finance",
         title="Confidence-weighted SMA crossover: sizing and failure modes",
         prompt=_FINANCE_SMA_CONFIDENCE,
+    ),
+    UseCase(
+        id="finance-dca-vs-trend",
+        category="Finance",
+        title="DCA vs SMA crossover: regime analysis and hybrid filter",
+        prompt=_FINANCE_DCA,
+    ),
+    UseCase(
+        id="finance-portfolio-rotation",
+        category="Finance",
+        title="Multi-asset momentum rotation: BTC / ETH / SOL",
+        prompt=_FINANCE_PORTFOLIO_ROTATION,
+    ),
+    UseCase(
+        id="finance-volume-breakout",
+        category="Finance",
+        title="Volume-confirmed SMA crossover: sizing and signal quality",
+        prompt=_FINANCE_VOLUME_BREAKOUT,
     ),
     UseCase(
         id="swe-3sum",
