@@ -1,4 +1,4 @@
-""Pre-built prompt templates for real-world model comparison use-cases."""
+"""Pre-built prompt templates for real-world model comparison use-cases."""
 
 from dataclasses import dataclass
 
@@ -39,7 +39,7 @@ or max drawdown where possible.\
 """
 
 _FINANCE_SIGNALS = """\
-You are a quantitative analyst comparing two entry signals for an ETH daily strategy.
+You are a quantitative analyst comparing three entry signals for an ETH daily strategy.
 
 Signal A — Donchian Breakout with pyramid:
   BUY  when close > max(prior 20-day high) AND close > EMA(50)
@@ -51,39 +51,84 @@ Signal B — SMA Crossover (single entry):
   BUY  when SMA(5) crosses above SMA(20) AND close > SMA(50)
   SELL when SMA(5) crosses below SMA(20) OR ATR(14) trailing stop hit (3×ATR below peak)
 
-Both signals use the same per-tranche position sizing: risk 2% of equity, initial stop 2×ATR.
+Signal C — Confidence-Weighted SMA Crossover (spread-scaled sizing):
+  BUY  when SMA(5) crosses above SMA(20) AND SMA(20) > SMA(50)
+  CONFIDENCE = (SMA(5) − SMA(20)) / SMA(20)          (normalised SMA spread)
+  SIZE = base_risk × clamp(1 + CONFIDENCE × 15, 0.5, 2.0)
+         (half position on weak crossovers; up to double on wide separations)
+  SELL when SMA(5) crosses below SMA(20) OR ATR(14) trailing stop hit (3×ATR below peak)
+  Restarts: persists the last SMA values so the signal recovers correctly after a process restart.
+
+All signals use base_risk = 2% of equity, initial stop 2×ATR.
 Evaluation metrics: Sharpe, Sortino, Calmar ratio, max drawdown, profit factor.
 
-Compare on these four dimensions:
-1. Entry frequency, lag, and pyramid opportunity rate
+Compare on these five dimensions:
+1. Entry frequency, lag, and pyramid / add-on opportunity rate
 2. False signal rate in range-bound vs trending markets
 3. Expected drawdown profile and Calmar ratio
 4. Which is better for a single asset vs a diversified multi-asset crypto portfolio?
+5. How does confidence-scaled sizing (Signal C) affect risk-adjusted returns vs a fixed 2% rule,
+   and what is the main failure mode in low-volatility, choppy regimes?
 
 Give a concrete recommendation with specific parameter values.\
 """
 
 _FINANCE_SWEEP = """\
-You are a quantitative analyst interpreting a parameter sensitivity sweep for an
-ETH trend-following strategy. The sweep grid was:
+You are a quantitative analyst interpreting two parameter sensitivity sweeps for
+ETH trend-following strategies. Both sweeps used 227 days of 2024 ETH daily OHLC
+data, 0.10% fee + 0.05% slippage per side, and report: total_return_pct, sharpe,
+sortino, calmar, max_drawdown_pct, win_rate_pct, n_trades.
 
-  entry_window : [15, 20, 25]   (Donchian breakout lookback, days)
-  n_tranches   : [1, 2, 3]      (pyramid entry tranches; 1 = single entry)
+Sweep 1 — Donchian pyramid strategy:
+  entry_window : [15, 20, 25]   (breakout lookback, days)
+  n_tranches   : [1, 2, 3]      (pyramid tranches; 1 = single entry)
+  Fixed: exit_window=10, ATR(14) trailing stop at 3×ATR, 2% risk per tranche.
 
-Each combination was backtested on 227 days of 2024 ETH daily OHLC data with
-these fixed parameters: exit_window=10, ATR(14) trailing stop at 3×ATR, 2% risk
-per tranche, 0.10% fee + 0.05% slippage per side.
-
-Metrics reported per combination: total_return_pct, sharpe, sortino, calmar,
-max_drawdown_pct, win_rate_pct, n_trades.
+Sweep 2 — Confidence-weighted SMA crossover (Signal C):
+  short_sma    : [3, 5, 8]      (fast SMA period, days)
+  long_sma     : [15, 20, 25]   (slow SMA period, days)
+  Fixed: SMA(50) trend filter, ATR(14) trailing stop at 3×ATR, base_risk=2%,
+         confidence_scale=15 (position multiplier), SMA(50) restart-persistence enabled.
 
 Questions:
-1. Which entry_window / n_tranches combination would you expect to show the best
-   Calmar ratio, and why?
-2. At what point does adding more tranches likely hurt performance (over-trading,
-   compounding drawdown risk)?
-3. What is the right way to select a final configuration given the small sample
+1. In Sweep 1, which entry_window / n_tranches combination would you expect to
+   show the best Calmar ratio, and why?
+2. In Sweep 2, how does the ratio short_sma / long_sma affect signal quality?
+   At what ratio does the crossover become too noisy or too slow?
+3. Across both sweeps, which strategy family — pyramid Donchian or confidence-
+   weighted SMA — is more robust to parameter choice on a small 227-day sample?
+4. What is the right way to select a final configuration given the small sample
    size, and what additional validation would you require before trading live?\
+"""
+
+_FINANCE_SMA_CONFIDENCE = """\
+You are a quantitative analyst evaluating a confidence-weighted SMA crossover
+strategy for daily ETH trading.
+
+Strategy: Confidence-Weighted SMA Crossover (ETH, daily bars)
+──────────────────────────────────────────────────────────────────────────────────
+Entry  : SMA(5) crosses above SMA(20) AND SMA(20) > SMA(50) (trend filter).
+Confidence: Normalised SMA spread = (SMA(5) − SMA(20)) / SMA(20).
+           A wider spread signals a stronger trend and justifies a larger position.
+Sizing : base_risk = 2% of equity.
+         position_size = base_risk × clamp(1 + spread × 15, 0.5, 2.0)
+         (scales from 1% equity at a weak crossover to 4% at a high-conviction one)
+Exit   : SMA(5) crosses below SMA(20) OR ATR(14) trailing stop at 3×ATR below peak.
+Restart: Last SMA(5), SMA(20), and SMA(50) values are persisted every 10 bars so
+         the strategy recovers the correct signal state after a process restart.
+Costs  : 0.10% taker fee + 0.05% slippage per side.
+Metrics: Sharpe, Sortino (downside-only volatility), Calmar (CAGR / max-drawdown).
+
+Questions:
+1. Does confidence-scaled sizing improve or degrade risk-adjusted return vs a fixed
+   2% rule? Which metric — Sortino or Calmar — would you expect to improve most, and why?
+2. What is the main failure mode in low-volatility, choppy markets where the SMA
+   spread stays narrow for extended periods?
+3. How should the spread multiplier (currently ×15) be calibrated without overfitting
+   to the backtest window? What data or cross-validation approach would you use?
+4. Propose one additional filter (e.g. volume, volatility regime, or a macro signal)
+   that would improve the quality of high-confidence signals without significantly
+   reducing trade frequency.\
 """
 
 _SWE_3SUM = """\
@@ -137,6 +182,12 @@ USE_CASES: list[UseCase] = [
         category="Finance",
         title="Interpret a parameter sweep: entry window vs pyramid tranches",
         prompt=_FINANCE_SWEEP,
+    ),
+    UseCase(
+        id="finance-sma-confidence",
+        category="Finance",
+        title="Confidence-weighted SMA crossover: sizing and failure modes",
+        prompt=_FINANCE_SMA_CONFIDENCE,
     ),
     UseCase(
         id="swe-3sum",
